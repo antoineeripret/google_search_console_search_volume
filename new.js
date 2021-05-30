@@ -3,7 +3,8 @@ function get_keywords() {
   let arr = [];
   //gets table
   //there are several tables with the same class
-  var oTable = document.getElementsByClassName('i3WFpf')[0];
+  var oTable =
+    document.getElementsByClassName('i3WFpf')[0];
   //gets rows of table
   var rowLength = oTable.rows.length;
   //loops through rows
@@ -18,31 +19,33 @@ function get_keywords() {
   return arr;
 }
 
-async function get_search_vol(keyword, country) {
+async function get_search_vol(country) {
   // Transform keyword request to ASCII (URL safe)
-  const kwTransformed = encodeURIComponent(`["${keyword}"]`).replace(
-    /%20/g,
-    '+'
-  );
-  //Base URL to generate our list of urls
-  const requestUrl = `https://db2.keywordsur.fr/keyword_surfer_keywords?country=${country}&keywords=${kwTransformed}`;
-  const response = await fetch(requestUrl); // Make request to Keyword Surfer
-  const json = await response.json(); // Transform response to JSON
-  const searchVol = json[keyword]?.search_volume ?? 0; // If keyword has data get the data else return 0 (optional chaining operator (?.) + Nullish coalescing operator (??))
-  return searchVol;
-}
 
-async function getData() {
   const set = get_keywords(); // Get all keywords from GSC
+
   const allKeywords = {}; // Store future reponses in hashmap
 
-  // Loop through GSC keywords and request keyword surfer data
-  for (const keyword of set) {
-    const sv = await get_search_vol(keyword, 'fr');
-    allKeywords[keyword] = sv;
-  }
+  while (set.length) {
+    const chunk = set.splice(0, 50);
+    const map = chunk.map((kw) => `${kw}`);
+    const kwsTransformed = JSON.stringify(map);
+    //Base URL to generate our list of urls
+    const requestUrl = `https://db2.keywordsur.fr/keyword_surfer_keywords?country=${country}&keywords=${encodeURI(
+      kwsTransformed
+    ).replace(/%20/g, '+')}`;
+    const response = await fetch(requestUrl); // Make request to Keyword Surfer
+    const json = await response.json(); // Transform response to JSON
 
-  // console.log(allKeywords); // Just to check the output
+    // Loop through response object composed of multiple objects
+    for (let prop in json) {
+      // Deconstruct each object to obtain only search volume
+      const { search_volume } = json[prop];
+      // Create entry in hasmap with keyword as key and search_volume as value
+      allKeywords[prop] = search_volume;
+    }
+  }
+  console.log(allKeywords);
   return allKeywords;
 }
 
@@ -50,15 +53,19 @@ function createCell(text) {
   var cell = document.createElement('td');
   var cellText = document.createTextNode(text);
   cell.appendChild(cellText);
-  cell.setAttribute('style', 'font-size:12px;font-weight: bold');
+  cell.setAttribute(
+    'style',
+    'font-size:12px;font-weight: bold'
+  );
 
   return cell;
 }
 
-async function addVolumes() {
-  const volumes = await getData(); // Wait to get hasmap of search volumes
+async function addVolumes(country) {
+  const volumes = await get_search_vol(country); // Wait to get hasmap of search volumes
 
-  var tbl = document.getElementsByClassName('i3WFpf')[0]; // Select table
+  var tbl =
+    document.getElementsByClassName('i3WFpf')[0]; // Select table
 
   // Loop through rows
   for (let i in tbl.rows) {
@@ -70,8 +77,14 @@ async function addVolumes() {
     // Add header
     if (query === 'Top queries') {
       row.appendChild(createCell('Volumes'));
-    } else row.appendChild(createCell(volumes[query]));
+    } else {
+      if (volumes[query])
+        row.appendChild(
+          createCell(volumes[query])
+        );
+      else row.appendChild(createCell(0));
+    }
   }
 }
 
-addVolumes();
+addVolumes('fr');
