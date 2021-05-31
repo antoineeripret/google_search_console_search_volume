@@ -99,6 +99,33 @@ function createCell(text) {
   return cell;
 }
 
+function createDownloadButton(file) {
+  // Select parent div
+  const parent = document.querySelector('.sVgexf');
+  // Create div
+  const div = document.createElement('div');
+  div.setAttribute('style', 'font-weight: bold;margin:5px');
+
+  const button = document.createElement('a');
+  const buttonText = document.createTextNode(
+    'Download Performance + Search Volume'
+  );
+  button.setAttribute('class', 'gIhoZ');
+  button.setAttribute(
+    'style',
+    'padding: 10px;background-color: #f5f5f5;border-radius: 5px;'
+  );
+
+  button.appendChild(buttonText);
+  div.appendChild(button);
+  parent.appendChild(div);
+
+  // Credit to isherwood & Default (https://stackoverflow.com/questions/14964035/how-to-export-javascript-array-info-to-csv-on-client-side)
+  button.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURI(file));
+  button.setAttribute('download', 'gsc_volumes_data.csv');
+  return `Downloading all data + volumes to CSV...`;
+}
+
 async function addVolumes() {
   const volumes = await getData(); // Wait to get hasmap of search volumes
   var tbl = document.getElementsByClassName('i3WFpf')[0]; // Select table
@@ -135,15 +162,7 @@ async function addVolumes() {
       csvExport = csvExport.concat(line.join(','), '\n');
     }
   }
-  // Credit to isherwood & Default (https://stackoverflow.com/questions/14964035/how-to-export-javascript-array-info-to-csv-on-client-side)
-  const link = window.document.createElement('a');
-  link.setAttribute(
-    'href',
-    'data:text/csv;charset=utf-8,' + encodeURI(csvExport)
-  );
-  link.setAttribute('download', 'gsc_volumes_data.csv');
-  link.click();
-  return `Downloading all data + volumes to CSV...`;
+  createDownloadButton(csvExport);
 }
 
 addVolumes();
