@@ -1,11 +1,4 @@
-//MVP para la extensión cuyo objetivo principal será 
-//incluir en GSC una columna adicional con los volúmenes de búsqueda 
-//Fuente: API de Keyword Surfer 
-
-
-//function to extract keywords from GSC table 
-//max numbered of keywords returned: 1000 
-function get_keywords(){
+function get_keywords() {
     //array where we will store our keyword
     let arr = [];
     //gets table
@@ -14,15 +7,28 @@ function get_keywords(){
     //gets rows of table
     var rowLength = oTable.rows.length;
     //loops through rows
-    for (i = 0; i < rowLength; i++){
-       //gets cells of current row
-       var oCells = oTable.rows.item(i).cells;
-       //gets amount of cells of current row
-       var cellLength = oCells.length;
-       //loops through each cell in current row{
-       arr.push(oCells.item(0).innerText)
-       }
-    return arr
+    for (i = 0; i < rowLength; i++) {
+        //gets cells of current row
+        var oCells = oTable.rows.item(i).cells;
+        //loops through each cell in current row{
+        arr.push(oCells.item(0).innerText);
+    }
+    // Remove "Top Queries" header from array
+    arr.shift();
+    return arr;
+}
+
+async function get_search_vol(chunk, url) {
+    const requestUrl = url; // URL to request
+    const response = await fetch(requestUrl); // Make request to Keyword Surfer
+    const json = await response.json(); // Transform response to JSON
+    //loop the response and return an array with volumes
+    let keywords = {};
+    let keys = chunk
+    for (i = 0; i < keys.length; i++){
+        keywords[keys[i]] = json[keys[i]]?.search_volume ?? 0; // If keyword has data get the data else return 0 (optional chaining operator (?.) + Nullish coalescing operator (??))
+    }
+    return keywords;
 }
 
 //function to divide an array in X arrays 
@@ -31,92 +37,82 @@ function chunkArray(myArray, chunk_size){
     var index = 0;
     var arrayLength = myArray.length;
     var tempArray = [];
-        
+
     for (index = 0; index < arrayLength; index += chunk_size) {
-        myChunk = myArray.slice(index, index+chunk_size);
+        var myChunk = myArray.slice(index, index+chunk_size);
         // Do something if you want with the group
-        tempArray.push(myChunk);
+        var finalChunk = [];
+        for (y = 0; y < myChunk.length; y++) {
+            finalChunk.push(myChunk[y].replace("\"","").replace("\"",""))
+        }
+        tempArray.push(finalChunk);
     }
     
     return tempArray;
 }
 
 //generate the Keyword Surfer's URLs for our chunks
-function generate_urls(chunks){
+function generate_urls(chunks, country){
     //output 
     var arr = [];
     //Base URL to generate our list of urls
-    base_url = "https://db2.keywordsur.fr/keyword_surfer_keywords?country=fr&keywords=[%22";
+    base_url = `https://db2.keywordsur.fr/keyword_surfer_keywords?country=${country}&keywords=[%22`;
     //loop 
     for (i = 0; i < chunks.length; i++){
-        url = base_url.concat(chunks[i].join("%22,%22"),"%22]");
+        var url = base_url.concat(chunks[i].join("%22,%22"),"%22]");
         arr.push(url);
     }
     return arr
 }
 
-//Get arrays with at most 50 keywords
-urls = generate_urls(chunkArray(get_keywords(),50))
-//create empty variables
-var json;
-var volumes = {};
-
-//create a simplified dictionnary with keywords (key) and searc volume returned by Keyword Surfer (value)
-//IMPORTANT: keyword with no volume are not returned by Keyword Surfer 
-function create_simplified_dict(json){
-//loop keys and create a dict with key and search volume only 
-    for (i = 0; i < Object.keys(json).length; i++){
-        volumes[Object.keys(json)[i]]=json[Object.keys(json)[i]]["search_volume"];
-    }
-}
-
-//Add missing keywords (0 volume) to our dictionnary 
-
-//Source: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array/some
-function checkAvailability(arr, val) {
-    return arr.some(function(arrVal) {
-      return val === arrVal;
+function get_user_country(){
+    chrome.storage.local.get('country', function(result) {
+        if (result && result.favoriteColor) {
+            return result.country;
+        } else return 'us'
     });
 }
 
-kws = get_keywords()
-//loop keys in our keywords list 
-for (i = 0; i < kws.length; i++){
-    //if keyword is not in volumes
-    if (checkAvailability(volumes,kws[i])==false){
-        volumes[kws[i]]=0;
+async function getData() {
+    const kws = get_keywords(); // Get all keywords from GSC
+    const chunks = chunkArray(kws,50) // transform keyword in set of keywords
+    const urls = generate_urls(chunks,'fr')
+    const allKeywords = {}; // Store future reponses in hashmap
+
+    // Loop through GSC set of keywords and request keywoFrd surfer data
+    for (let i = 0; i < urls.length; i++) {
+        var sv = await get_search_vol(chunks[i], urls[i]);
+        var keys = Object.keys(sv)
+        for (let y = 0; y < keys.length; y++){
+            allKeywords[Object.keys(sv)[y]] = sv[Object.keys(sv)[y]]
+        }
+    }
+    console.log(allKeywords); // Just to check the output
+    return allKeywords;
+}
+
+function createCell(text) {
+    var cell = document.createElement('td');
+    var cellText = document.createTextNode(text);
+    cell.appendChild(cellText);
+    cell.setAttribute('style', 'font-size:12px;font-weight: bold');
+    return cell;
+}
+
+async function addVolumes() {
+    const volumes = await getData(); // Wait to get hasmap of search volumes
+    var tbl = document.getElementsByClassName('i3WFpf')[0]; // Select table
+    // Loop through rows
+    for (let i in tbl.rows) {
+        // Select each row
+        let row = tbl.rows[i];
+        // Select first cell (query)
+        var query = row.cells[0].textContent;
+        // Add header
+        if (query === tbl.rows[0].cells[0].textContent) {
+            row.appendChild(createCell('Search Volume'));
+        } else row.appendChild(createCell(volumes[query]));
     }
 }
 
-//IMPORTANT: we just get the data with one URL here, before release we need to inclide a for loop with all calls
-//fetch the data
-fetch(urls[0])
-    //convert response to JSON
-    .then(res => res.json())
-    //get the data a an object 
-    .then(data => json = data)
-
-//get the data with the functions created above 
-var keys = Object.keys(json)
-create_simplified_dict(keys)
-
-//Add a new column in GSC with our data 
-//Source: https://www.redips.net/javascript/adding-table-rows-and-columns/ (modified) 
-
-// create DIV element and append to the table cell
-function createCell(cell, text, style) {
-    var div = document.createElement('div'), // create DIV element
-        txt = document.createTextNode(text); // create text node
-    div.appendChild(txt);                    // append text node to the DIV
-    cell.appendChild(div);                   // append DIV to the table cell
-}
-
-// append column to the HTML table
-function appendColumn() {
-    var tbl = document.getElementsByClassName('i3WFpf')[0], // table reference
-        i;
-    // open loop for each row and append cell
-    for (i = 0; i < tbl.rows.length; i++) {
-        createCell(tbl.rows[i].insertCell(tbl.rows[i].cells.length), volumes[Object.keys(volumes)[i]], '');
-    }
-}
+addVolumes();
