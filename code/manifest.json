@@ -5,13 +5,13 @@
    "version": "1.0",
    "content_scripts": [ {
       "js": [ "content.js" ],
-      "matches": [ "https://search.google.com/search-console/performance/search-analytics*" ],
+      "matches": ["https://search.google.com/*"],
       "run_at": "document_end"
    } ],
    "icons": {
       "128": "icon.png"
    },
-   "permissions": [ "activeTab", "storage","webRequest", "https://search.google.com/search-console/performance/search-analytics*"], 
+   "permissions": [ "activeTab", "storage","webRequest","https://search.google.com/*"], 
    "options_ui": {
       "page": "options.html",
       "open_in_tab": false

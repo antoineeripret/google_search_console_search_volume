@@ -64,17 +64,24 @@ function get_keywords() {
     }
     return arr;
   }
-  
-function get_user_country(){
-    if (localStorage['country']){
-        return localStorage['country'];
-    } else return 'us'
-}
+
+  function sleep(milliseconds) {
+    const date = Date.now();
+    let currentDate = null;
+    do {
+      currentDate = Date.now();
+    } while (currentDate - date < milliseconds);
+  }
   
   async function getData() {
     const kws = get_keywords(); // Get all keywords from GSC
     const chunks = chunkArray(kws, 50); // transform keyword in set of keywords
-    const urls = generate_urls(chunks, get_user_country());
+    var country = '';
+    chrome.storage.sync.get('country', function (response) {
+      country = response.country;
+    })
+    console.log(country);
+    const urls = generate_urls(chunks, country);
     const allKeywords = {}; // Store future reponses in hashmap
   
     // Loop through GSC set of keywords and request keywoFrd surfer data
