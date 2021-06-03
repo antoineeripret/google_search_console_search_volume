@@ -22,11 +22,11 @@ async function get_search_vol(chunk, url) {
   const requestUrl = url; // URL to request
   const response = await fetch(requestUrl); // Make request to Keyword Surfer
   const json = await response.json(); // Transform response to JSON
+
   //loop the response and return an array with volumes
   let keywords = {};
-  let keys = chunk;
-  for (i = 0; i < keys.length; i++) {
-    keywords[keys[i]] = json[keys[i]]?.search_volume ?? 0; // If keyword has data get the data else return 0 (optional chaining operator (?.) + Nullish coalescing operator (??))
+  for (i = 0; i < chunk.length; i++) {
+    keywords[chunk[i]] = json[chunk[i]]?.search_volume ?? 0; // If keyword has data get the data else return 0 (optional chaining operator (?.) + Nullish coalescing operator (??))
   }
   return keywords;
 }
@@ -54,10 +54,12 @@ function chunkArray(myArray, chunk_size) {
 //generate the Keyword Surfer's URLs for our chunks
 function generate_urls(chunks, country) {
   //output
-  var arr = [];
+  const arr = [];
+
   //Base URL to generate our list of urls
-  base_url = `https://db2.keywordsur.fr/keyword_surfer_keywords?country=${country}&keywords=[%22`;
-  //loop
+  const base_url = `https://db2.keywordsur.fr/keyword_surfer_keywords?country=${country}&keywords=[%22`;
+
+  // Loop through chunk to create array of keywords in request
   for (i = 0; i < chunks.length; i++) {
     var url = base_url.concat(chunks[i].join('%22,%22'), '%22]');
     arr.push(url);
@@ -65,21 +67,13 @@ function generate_urls(chunks, country) {
   return arr;
 }
 
-function get_user_country() {
-  chrome.storage.local.get('country', function (result) {
-    if (result && result.favoriteColor) {
-      return result.country;
-    } else return 'us';
-  });
-}
-
-async function getData() {
+async function getData(country) {
   const kws = get_keywords(); // Get all keywords from GSC
-  const chunks = chunkArray(kws, 50); // transform keyword in set of keywords
-  const urls = generate_urls(chunks, 'fr');
+  const chunks = chunkArray(kws, 50); // transform keyword in multiple arrays of 50 keywords
+  const urls = generate_urls(chunks, country); // Build Request URL
   const allKeywords = {}; // Store future reponses in hashmap
 
-  // Loop through GSC set of keywords and request keywoFrd surfer data
+  // Loop through GSC set of keywords and request keyword surfer data
   for (let i = 0; i < urls.length; i++) {
     var sv = await get_search_vol(chunks[i], urls[i]);
     var keys = Object.keys(sv);
@@ -87,7 +81,7 @@ async function getData() {
       allKeywords[Object.keys(sv)[y]] = sv[Object.keys(sv)[y]];
     }
   }
-  console.log(allKeywords); // Just to check the output
+  // console.log(allKeywords); // Just to check the output
   return allKeywords;
 }
 
@@ -95,7 +89,10 @@ function createCell(text) {
   var cell = document.createElement('td');
   var cellText = document.createTextNode(text);
   cell.appendChild(cellText);
-  cell.setAttribute('style', 'font-size:12px;font-weight: bold');
+  cell.setAttribute(
+    'style',
+    'font-size:12px;font-weight:bold;text-align:right;'
+  );
   return cell;
 }
 
@@ -116,19 +113,20 @@ function createDownloadButton(file) {
     'padding: 10px;background-color: #f5f5f5;border-radius: 5px;'
   );
 
+  // Credit to isherwood & Default (https://stackoverflow.com/questions/14964035/how-to-export-javascript-array-info-to-csv-on-client-side)
+  button.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURI(file));
+  button.setAttribute('download', 'gsc_volumes_data.csv');
+
   button.appendChild(buttonText);
   div.appendChild(button);
   parent.appendChild(div);
 
-  // Credit to isherwood & Default (https://stackoverflow.com/questions/14964035/how-to-export-javascript-array-info-to-csv-on-client-side)
-  button.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURI(file));
-  button.setAttribute('download', 'gsc_volumes_data.csv');
   return `Downloading all data + volumes to CSV...`;
 }
 
-async function addVolumes() {
-  const volumes = await getData(); // Wait to get hasmap of search volumes
-  var tbl = document.getElementsByClassName('i3WFpf')[0]; // Select table
+async function addVolumes(country) {
+  const volumes = await getData(country); // Wait to get hasmap of search volumes
+  const tbl = document.getElementsByClassName('i3WFpf')[0]; // Select table
   // Future CSV
   let csvExport = '';
 
@@ -146,7 +144,7 @@ async function addVolumes() {
       const query = row.cells[0].textContent;
       // Add header
       if (query === 'Top queries') {
-        row.appendChild(createCell('Volumes'));
+        row.appendChild(createCell('Search Volumes'));
       } else {
         // If there is search volume data add it
         if (volumes[query]) row.appendChild(createCell(volumes[query]));
@@ -165,4 +163,11 @@ async function addVolumes() {
   createDownloadButton(csvExport);
 }
 
-addVolumes();
+// Extract country variable from local storage
+chrome.storage.local.get('country', function (savedOption) {
+  // Use "United States" ('us') as default option if there is no saved option from user
+  const country = savedOption.country || 'us';
+  console.log(`Getting Search Volume from country "${country}"...`);
+  // Run Add volumes with specified country
+  addVolumes(country);
+});

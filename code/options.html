@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html>
-<head><title>Choose your country</title></head>
-<body>
+  <head>
+    <title>Choose your country</title>
+  </head>
+  <body>
+    Country
+    <select id="country">
+      <option value="us">us</option>
+      <option value="au">au</option>
+      <option value="br">br</option>
+      <option value="es">es</option>
+      <option value="fr">fr</option>
+      <option value="gb">gb</option>
+      <option value="mx">mx</option>
+    </select>
 
-Country
-<select id="country">
-    <option value="au">au</option>
-    <option value="br">br</option>
-    <option value="es">es</option>
-    <option value="fr">fr</option>
-    <option value="gb">gb</option>
-    <option value="mx">mx</option>
-</select>
+    <div id="status"></div>
+    <button id="save">Save</button>
 
-<div id="status"></div>
-<button id="save">Save</button>
-
-<script src="options.js"></script>
-</body>
+    <script src="options.js"></script>
+  </body>
 </html>
