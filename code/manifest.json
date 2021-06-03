@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "Google Search Console - Keyword Search Volume",
-  "description": "This free extension allows you to retrieve search volume directly into Google Search Console.",
-  "version": "1.0",
+  "name": "Google Search Console - Keyword volume",
+  "description": "Retrieve & download keyword volume directly inside Google Search Console UI.",
+  "version": "0.1",
   "content_scripts": [
     {
       "js": ["code.js"],

@@ -90,7 +90,7 @@ function createCell(text) {
   cell.appendChild(cellText);
   cell.setAttribute(
     'style',
-    'font-size:12px;font-weight:bold;text-align:right;'
+    'font-size:12px;font-weight:bold;text-align:center;'
   );
   return cell;
 }
@@ -142,7 +142,7 @@ async function addVolumes(country) {
       // Select first cell (query)
       const query = row.cells[0].textContent;
       // Add header
-      if (query === 'Top queries') {
+      if (query === tbl.rows[0].cells[0].textContent) {
         row.appendChild(createCell('Search Volumes'));
       } else {
         // If there is search volume data add it
