@@ -1,4 +1,7 @@
-// Saves options to chrome.storage
+const optionsStatus = document.getElementById('status');
+const countryList = document.getElementById('country');
+const optionsSaveBtn = document.getElementById('save');
+
 function save_options() {
   var country = document.getElementById('country').value;
   chrome.storage.local.set({ country: country }, function () {

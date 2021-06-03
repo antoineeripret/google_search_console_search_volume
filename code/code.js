@@ -22,7 +22,6 @@ async function get_search_vol(chunk, url) {
   const requestUrl = url; // URL to request
   const response = await fetch(requestUrl); // Make request to Keyword Surfer
   const json = await response.json(); // Transform response to JSON
-
   //loop the response and return an array with volumes
   let keywords = {};
   for (i = 0; i < chunk.length; i++) {
@@ -73,7 +72,7 @@ async function getData(country) {
   const urls = generate_urls(chunks, country); // Build Request URL
   const allKeywords = {}; // Store future reponses in hashmap
 
-  // Loop through GSC set of keywords and request keyword surfer data
+  // Loop through GSC set of keywords and request keywoFrd surfer data
   for (let i = 0; i < urls.length; i++) {
     var sv = await get_search_vol(chunks[i], urls[i]);
     var keys = Object.keys(sv);
