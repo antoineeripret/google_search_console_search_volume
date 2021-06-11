@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "Google Search Console - Keyword volume",
+  "name": "Keyword Volume Extractor",
   "description": "Retrieve & download keyword volume directly inside Google Search Console UI.",
   "version": "0.1",
   "content_scripts": [
@@ -14,10 +14,7 @@
     "128": "icon.png"
   },
   "permissions": [
-    "activeTab",
-    "storage",
-    "webRequest",
-    "https://search.google.com/search-console/*breakdown=query"
+    "storage"
   ],
   "options_ui": {
     "page": "options.html",
