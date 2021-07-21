@@ -42,7 +42,7 @@ function chunkArray(myArray, chunk_size) {
     // Do something if you want with the group
     var finalChunk = [];
     for (y = 0; y < myChunk.length; y++) {
-      finalChunk.push(myChunk[y].replace('"', '').replace('"', '')).replace('&','');
+      finalChunk.push(myChunk[y].replace('"', '').replace('"', '').replace('&',''));
     }
     tempArray.push(finalChunk);
   }
