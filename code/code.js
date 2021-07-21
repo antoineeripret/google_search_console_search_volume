@@ -90,7 +90,7 @@ function createCell(text) {
   cell.appendChild(cellText);
   cell.setAttribute(
     'style',
-    'font-size:12px;font-weight:bold;text-align:center;'
+    'font-size:12px;font-weight:bold;text-align:center;padding:18px 28px;'
   );
   return cell;
 }
