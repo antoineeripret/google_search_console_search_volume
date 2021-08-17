@@ -166,6 +166,7 @@ async function addVolumes(country) {
 chrome.storage.local.get('country', function (savedOption) {
   // Use "United States" ('us') as default option if there is no saved option from user
   const country = savedOption.country || 'us';
+  // Check if the user 
   console.log(`Getting Search Volume from country "${country}"...`);
   // Run Add volumes with specified country
   addVolumes(country);
