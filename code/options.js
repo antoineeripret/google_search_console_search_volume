@@ -15,6 +15,7 @@ function save_options() {
     }, 750);
   });
 
+  // the part that is not working
   if (semrush_key != ''){
     chrome.storage.local.set({ semrush_key: semrush_key }, async function () {
       //Generate a single request to check that the API key is correct
