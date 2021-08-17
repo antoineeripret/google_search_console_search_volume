@@ -11,7 +11,7 @@ function get_keywords() {
     //gets cells of current row
     var oCells = oTable.rows.item(i).cells;
     //loops through each cell in current row{
-    arr.push(oCells.item(0).innerText);
+    arr.push(oCells.item(0).innerText.replace('&',' ');
   }
   // Remove "Top Queries" header from array
   arr.shift();
