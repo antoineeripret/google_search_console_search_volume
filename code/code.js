@@ -197,10 +197,10 @@ async function addVolumes(country) {
   })
   api_key = localStorage.getItem('api_key_ls');
   //if the key doesn't exist, get data from Keyword Surfer
-  if (api_key === "undefined") {
-    var volumes = await getData(country); // Wait to get hasmap of search volumes
-  } else {
+  if (api_key) {
     var volumes = await getData_semrush(country); // Wait to get hasmap of search volumes
+  } else {
+    var volumes = await getData(country); // Wait to get hasmap of search volumes
   }
   const tbl = document.getElementsByClassName('i3WFpf')[0]; // Select table
   // Future CSV

@@ -6,7 +6,7 @@ async function save_options() {
   var country = document.getElementById('country').value;
   var semrush_key = document.getElementById('semrush_key').value;
 
-  if ((semrush_key != "") || (semrush_key != undefined) || (semrush_key != "undefined")) {
+  if (semrush_key) {
 
       chrome.storage.local.set({ country: country });
       chrome.storage.local.set({ semrush_key: semrush_key }, function () {
