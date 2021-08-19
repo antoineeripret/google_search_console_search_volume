@@ -2,41 +2,30 @@ const optionsStatus = document.getElementById('status');
 const countryList = document.getElementById('country');
 const optionsSaveBtn = document.getElementById('save');
 
-function save_options() {
+async function save_options() {
   var country = document.getElementById('country').value;
-  var semrush_key = document.getElementById('semrush').value;
+  var semrush_key = document.getElementById('semrush_key').value;
 
-  chrome.storage.local.set({ country: country }, function () {
-    // Update status to let user know options were saved.
-    var status = document.getElementById('status');
-    status.textContent = 'Country saved.';
-    setTimeout(function () {
-      status.textContent = '';
-    }, 750);
-  });
+  if ((semrush_key != "") || (semrush_key != undefined) || (semrush_key != "undefined")) {
 
-  // the part that is not working
-  if (semrush_key != ''){
-    chrome.storage.local.set({ semrush_key: semrush_key }, async function () {
-      //Generate a single request to check that the API key is correct
-      const dummy_response_semrush = await fetch("https://api.semrush.com/?type=phrase_these&key="+semrush_key+"&phrase=apple&export_columns=Ph,Nq&database=es"); // Make request
-      const dummy_status = await dummy_response_semrush.status;
-      console.log(dummy_status)
-      
-      if (dummy_status==200){
+      chrome.storage.local.set({ country: country });
+      chrome.storage.local.set({ semrush_key: semrush_key }, function () {
       // Update status to let user know options were saved.
-        var status = document.getElementById('status');
-        status.textContent = 'Country & Semrush key saved.';
-        setTimeout(function () {
-          status.textContent = '';
-        }, 750);
-      } else {
-        var status = document.getElementById('status');
-        status.textContent = 'Please check that your API key is valid.';
-        setTimeout(function () {
-          status.textContent = '';
-        }, 2000);
-      }
+      var status = document.getElementById('status');
+      status.textContent = 'Country & Semrush key saved.';
+      setTimeout(function () {
+      status.textContent = '';
+      }, 2000);
+    });
+  } else {
+    chrome.storage.local.remove(['semrush_key']);
+    chrome.storage.local.set({ country: country }, function () {
+      // Update status to let user know options were saved.
+      var status = document.getElementById('status');
+      status.textContent = 'Country saved.';
+      setTimeout(function () {
+        status.textContent = '';
+      }, 2000);
     });
   }
 }
@@ -45,14 +34,16 @@ function save_options() {
 // stored in chrome.storage.
 function restore_options() {
   // Use default value
-  chrome.storage.local.get(
-    {
-      country: 'fr',
-    },
-    function (items) {
-      document.getElementById('country').value = items.country;
+  chrome.storage.local.get('country',function (results) {
+      document.getElementById('country').value = results.country;
     }
   );
+
+  chrome.storage.local.get('semrush_key',function (results) {
+    document.getElementById('semrush_key').value = results.semrush_key;
+  }
+);
 }
+
 document.addEventListener('DOMContentLoaded', restore_options);
 document.getElementById('save').addEventListener('click', save_options);
